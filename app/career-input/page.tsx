@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 const marksOptions = ["below 60", "60-80", "80+"];
 const subjects = ["Math", "Science", "Biology", "Commerce", "Arts", "Computers"];
@@ -9,6 +9,14 @@ const interests = ["Tech", "Design", "Business", "People", "Research", "Teaching
 const hobbies = ["Coding", "Drawing", "Gaming", "Sports", "Speaking", "Editing"];
 
 export default function CareerInputPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CareerInputContent />
+    </Suspense>
+  );
+}
+
+function CareerInputContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const level = searchParams.get("level");
@@ -113,7 +121,11 @@ export default function CareerInputPage() {
                     key={interest}
                     type="button"
                     onClick={() =>
-                      toggleChip(interest, selectedInterests, setSelectedInterests)
+                      toggleChip(
+                        interest,
+                        selectedInterests,
+                        setSelectedInterests
+                      )
                     }
                     className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                       selectedInterests.includes(interest)
