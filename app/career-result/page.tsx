@@ -19,6 +19,60 @@ interface CareerInputData {
   hobbies: string[];
 }
 
+// ⭐ Skill → Resource link map
+const skillResourceLinks: Record<string, string> = {
+  "Python": "https://www.google.com/search?q=learn+python+for+beginners",
+  "Machine Learning": "https://www.google.com/search?q=machine+learning+course+for+beginners",
+  "Data Science": "https://www.google.com/search?q=data+science+course+for+beginners",
+  "Neural Networks": "https://www.google.com/search?q=neural+networks+basics+course",
+  "Programming": "https://www.google.com/search?q=programming+for+beginners",
+  "Problem Solving": "https://www.google.com/search?q=improve+problem+solving+skills",
+  "Data Structures": "https://www.google.com/search?q=data+structures+and+algorithms+course",
+  "Algorithms": "https://www.google.com/search?q=algorithms+course+for+beginners",
+  "Design Thinking": "https://www.google.com/search?q=design+thinking+course",
+  "Figma": "https://www.google.com/search?q=learn+figma+ui+design",
+  "User Research": "https://www.google.com/search?q=user+research+ux+course",
+  "Prototyping": "https://www.google.com/search?q=ui+ux+prototyping+course",
+  "Adobe Creative Suite": "https://www.google.com/search?q=learn+adobe+creative+suite",
+  "Typography": "https://www.google.com/search?q=typography+basics",
+  "Color Theory": "https://www.google.com/search?q=color+theory+for+designers",
+  "Layout Design": "https://www.google.com/search?q=layout+design+principles",
+  "Digital Marketing": "https://www.google.com/search?q=digital+marketing+course+for+beginners",
+  "Communication": "https://www.google.com/search?q=improve+communication+skills",
+  "Analytics": "https://www.google.com/search?q=marketing+analytics+course",
+  "Strategy": "https://www.google.com/search?q=business+strategy+basics",
+  "People Management": "https://www.google.com/search?q=people+management+skills",
+  "Recruitment": "https://www.google.com/search?q=recruitment+training+course",
+  "Organizational Psychology": "https://www.google.com/search?q=organizational+psychology+basics",
+  "Biology": "https://www.google.com/search?q=learn+biology+online",
+  "Chemistry": "https://www.google.com/search?q=basic+chemistry+course",
+  "Critical Thinking": "https://www.google.com/search?q=critical+thinking+skills",
+  "Empathy": "https://www.google.com/search?q=how+to+develop+empathy",
+  "Research Methods": "https://www.google.com/search?q=research+methods+course",
+  "Laboratory Skills": "https://www.google.com/search?q=basic+laboratory+skills",
+  "Data Analysis": "https://www.google.com/search?q=data+analysis+course",
+  "Scientific Writing": "https://www.google.com/search?q=scientific+writing+course",
+  "Research Methodology": "https://www.google.com/search?q=research+methodology+course",
+  "Pedagogy": "https://www.google.com/search?q=pedagogy+course+for+teachers",
+  "Subject Expertise": "https://www.google.com/search?q=become+expert+in+subject",
+  "Patience": "https://www.google.com/search?q=how+to+develop+patience",
+  "Financial Analysis": "https://www.google.com/search?q=financial+analysis+course",
+  "Accounting": "https://www.google.com/search?q=basic+accounting+course",
+  "Excel": "https://www.google.com/search?q=learn+excel+for+beginners",
+  "Market Analysis": "https://www.google.com/search?q=market+analysis+course",
+  "Leadership": "https://www.google.com/search?q=leadership+skills+course",
+  "Time Management": "https://www.google.com/search?q=time+management+course",
+  "Team Leadership": "https://www.google.com/search?q=team+leadership+skills",
+  "Business Strategy": "https://www.google.com/search?q=business+strategy+course",
+  "Financial Modeling": "https://www.google.com/search?q=financial+modelling+course",
+  "Market Research": "https://www.google.com/search?q=market+research+course",
+};
+
+function getSkillLink(skill: string): string {
+  if (skillResourceLinks[skill]) return skillResourceLinks[skill];
+  return `https://www.google.com/search?q=${encodeURIComponent(skill + " course for beginners")}`;
+}
+
 function generateCareerSuggestions(data: CareerInputData): CareerSuggestion[] {
   const { subjects, interests, hobbies } = data;
   const suggestions: CareerSuggestion[] = [];
@@ -156,7 +210,6 @@ function generateCareerSuggestions(data: CareerInputData): CareerSuggestion[] {
     });
   }
 
-  // Return 2-4 suggestions
   return suggestions.slice(0, 4);
 }
 
@@ -228,7 +281,9 @@ export default function CareerResultPage() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-2xl shadow-indigo-900/40 backdrop-blur-xl">
-            <h1 className="mb-4 text-3xl font-bold text-white sm:text-4xl">No Career Data Found</h1>
+            <h1 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
+              No Career Data Found
+            </h1>
             <p className="mb-6 text-slate-300">
               Please complete the career input form to get personalized recommendations.
             </p>
@@ -267,8 +322,12 @@ export default function CareerResultPage() {
         </div>
 
         <div className="text-center">
-          <h1 className="mb-3 text-4xl font-bold text-white sm:text-5xl">Your Career Recommendations</h1>
-          <p className="text-lg text-slate-300">Based on your interests, subjects, and hobbies</p>
+          <h1 className="mb-3 text-4xl font-bold text-white sm:text-5xl">
+            Your Career Recommendations
+          </h1>
+          <p className="text-lg text-slate-300">
+            Based on your interests, subjects, and hobbies
+          </p>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
@@ -277,28 +336,43 @@ export default function CareerResultPage() {
               key={index}
               className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-6 shadow-2xl shadow-indigo-900/40 backdrop-blur-xl transition hover:-translate-y-1 hover:border-emerald-400/60"
             >
-              <h2 className="mb-3 text-2xl font-bold text-white">{suggestion.title}</h2>
+              <h2 className="mb-3 text-2xl font-bold text-white">
+                {suggestion.title}
+              </h2>
 
               <div className="mb-4">
-                <p className="mb-2 text-sm font-semibold text-emerald-300">Why it fits you:</p>
-                <p className="text-sm leading-relaxed text-slate-300">{suggestion.why}</p>
+                <p className="mb-2 text-sm font-semibold text-emerald-300">
+                  Why it fits you:
+                </p>
+                <p className="text-sm leading-relaxed text-slate-300">
+                  {suggestion.why}
+                </p>
               </div>
 
               <div className="mb-4">
-                <p className="mb-2 text-sm font-semibold text-violet-300">Path after your level:</p>
-                <p className="text-sm leading-relaxed text-slate-300">{suggestion.path}</p>
+                <p className="mb-2 text-sm font-semibold text-violet-300">
+                  Path after your level:
+                </p>
+                <p className="text-sm leading-relaxed text-slate-300">
+                  {suggestion.path}
+                </p>
               </div>
 
               <div>
-                <p className="mb-2 text-sm font-semibold text-sky-300">Skills to start:</p>
+                <p className="mb-2 text-sm font-semibold text-sky-300">
+                  Skills to start (click to learn):
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {suggestion.skills.map((skill) => (
-                    <span
+                    <a
                       key={skill}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
+                      href={getSkillLink(skill)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 hover:border-emerald-400 hover:text-emerald-200 hover:bg-emerald-500/10 transition"
                     >
                       {skill}
-                    </span>
+                    </a>
                   ))}
                 </div>
               </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 const tabs = ["Login", "Sign Up"] as const;
 type AuthTab = (typeof tabs)[number];
@@ -12,6 +12,11 @@ interface AuthFormState {
   email: string;
   password: string;
   confirmPassword: string;
+}
+
+interface AuthUser {
+  name: string;
+  email: string;
 }
 
 const defaultFormState: AuthFormState = {
@@ -42,10 +47,24 @@ export default function AuthPage() {
   const [formState, setFormState] = useState<AuthFormState>({ ...defaultFormState });
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
   const [error, setError] = useState("");
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
 
   const isSignup = activeTab === "Sign Up";
-
   const ctaLabel = useMemo(() => (isSignup ? "Create account" : "Log in"), [isSignup]);
+
+  // Load existing logged-in user
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("authUser");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as AuthUser;
+        setAuthUser(parsed);
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
 
   const validateForm = (): string => {
     if (!formState.email.trim()) {
@@ -80,9 +99,37 @@ export default function AuthPage() {
       return;
     }
 
-    // Simulate auth success and route to profile
-    setStatus("success");
-    router.push("/profile");
+    // Build user object
+    const user: AuthUser = {
+      name: isSignup
+        ? formState.name.trim()
+        : formState.name.trim() || "User",
+      email: formState.email.trim(),
+    };
+
+    try {
+      if (typeof window !== "undefined") {
+        // Save basic auth info
+        localStorage.setItem("authUser", JSON.stringify(user));
+
+        // Also sync into profileData so profile shows correct name/email
+        const existingProfileRaw = localStorage.getItem("profileData");
+        let profileData: any = existingProfileRaw ? JSON.parse(existingProfileRaw) : {};
+        profileData = {
+          ...profileData,
+          name: user.name,
+          email: user.email,
+        };
+        localStorage.setItem("profileData", JSON.stringify(profileData));
+      }
+
+      setAuthUser(user);
+      setStatus("success");
+      router.push("/profile");
+    } catch (err) {
+      setStatus("idle");
+      setError("Something went wrong while saving your account. Please try again.");
+    }
   };
 
   const handleFieldChange = (field: keyof AuthFormState, value: string) => {
@@ -94,6 +141,7 @@ export default function AuthPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6 lg:px-8 lg:flex-row">
+        {/* Left side info */}
         <div className="lg:w-1/2 space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-4 py-1 text-sm font-medium text-emerald-300">
             Secure & fast sign in
@@ -125,7 +173,9 @@ export default function AuthPage() {
           </div>
         </div>
 
+        {/* Right side auth card */}
         <div className="flex-1 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-indigo-900/40 backdrop-blur-xl">
+          {/* Tabs */}
           <div className="mb-6 flex gap-3 rounded-2xl bg-white/5 p-2">
             {tabs.map((tab) => (
               <button
@@ -148,6 +198,26 @@ export default function AuthPage() {
             ))}
           </div>
 
+          {/* Already logged in message on Login tab */}
+          {authUser && activeTab === "Login" && (
+            <div className="mb-4 rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+              <p className="font-semibold">You are already logged in.</p>
+              <p className="mt-1">
+                Name: <span className="font-medium">{authUser.name}</span>
+              </p>
+              <p className="mt-1">
+                Email: <span className="font-mono">{authUser.email}</span>
+              </p>
+              <Link
+                href="/profile"
+                className="mt-2 inline-block text-xs underline text-emerald-200 hover:text-emerald-100"
+              >
+                Go to your profile →
+              </Link>
+            </div>
+          )}
+
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignup && (
               <div>
