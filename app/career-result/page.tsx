@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 interface CareerSuggestion {
   title: string;
@@ -175,36 +176,60 @@ function getPathForLevel(level: string): string {
   }
 }
 
+function readStoredCareerInput(): CareerInputData | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const storedData = localStorage.getItem("careerInput");
+  if (!storedData) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(storedData) as CareerInputData;
+  } catch {
+    return null;
+  }
+}
+
 export default function CareerResultPage() {
   const router = useRouter();
-  const [suggestions, setSuggestions] = useState<CareerSuggestion[]>([]);
-  const [hasData, setHasData] = useState(false);
-
-  useEffect(() => {
-    const storedData = localStorage.getItem("careerInput");
-    if (storedData) {
-      try {
-        const data: CareerInputData = JSON.parse(storedData);
-        setHasData(true);
-        const generated = generateCareerSuggestions(data);
-        setSuggestions(generated);
-      } catch (error) {
-        setHasData(false);
-      }
-    } else {
-      setHasData(false);
+  const storedCareerInput = useMemo(() => readStoredCareerInput(), []);
+  const suggestions = useMemo(() => {
+    if (!storedCareerInput) {
+      return [];
     }
-  }, []);
+    return generateCareerSuggestions(storedCareerInput);
+  }, [storedCareerInput]);
+  const hasData = Boolean(storedCareerInput);
 
   if (!hasData) {
     return (
       <main className="min-h-screen bg-slate-950 text-slate-100">
         <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-indigo-900/40 backdrop-blur-xl text-center">
-            <h1 className="text-3xl font-bold text-white sm:text-4xl mb-4">
-              No Career Data Found
-            </h1>
-            <p className="text-slate-300 mb-6">
+          {/* 🔗 Navigation Links */}
+          <div className="mb-4 flex justify-between text-xs text-slate-300">
+            <Link href="/" className="underline hover:text-white">
+              ⬅ Back to Home
+            </Link>
+
+            <div className="flex gap-4">
+              <Link href="/career-input" className="underline hover:text-white">
+                Career Quiz
+              </Link>
+              <Link href="/profile" className="underline hover:text-white">
+                Profile
+              </Link>
+              <Link href="/auth" className="underline hover:text-white">
+                Login / Sign up
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-2xl shadow-indigo-900/40 backdrop-blur-xl">
+            <h1 className="mb-4 text-3xl font-bold text-white sm:text-4xl">No Career Data Found</h1>
+            <p className="mb-6 text-slate-300">
               Please complete the career input form to get personalized recommendations.
             </p>
             <button
@@ -222,13 +247,28 @@ export default function CareerResultPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
+        {/* 🔗 Navigation Links */}
+        <div className="mb-4 flex justify-between text-xs text-slate-300">
+          <Link href="/" className="underline hover:text-white">
+            ⬅ Back to Home
+          </Link>
+
+          <div className="flex gap-4">
+            <Link href="/career-input" className="underline hover:text-white">
+              Career Quiz
+            </Link>
+            <Link href="/profile" className="underline hover:text-white">
+              Profile
+            </Link>
+            <Link href="/auth" className="underline hover:text-white">
+              Login / Sign up
+            </Link>
+          </div>
+        </div>
+
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white sm:text-5xl mb-3">
-            Your Career Recommendations
-          </h1>
-          <p className="text-lg text-slate-300">
-            Based on your interests, subjects, and hobbies
-          </p>
+          <h1 className="mb-3 text-4xl font-bold text-white sm:text-5xl">Your Career Recommendations</h1>
+          <p className="text-lg text-slate-300">Based on your interests, subjects, and hobbies</p>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
@@ -237,36 +277,24 @@ export default function CareerResultPage() {
               key={index}
               className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-6 shadow-2xl shadow-indigo-900/40 backdrop-blur-xl transition hover:-translate-y-1 hover:border-emerald-400/60"
             >
-              <h2 className="text-2xl font-bold text-white mb-3">
-                {suggestion.title}
-              </h2>
-              
+              <h2 className="mb-3 text-2xl font-bold text-white">{suggestion.title}</h2>
+
               <div className="mb-4">
-                <p className="text-sm font-semibold text-emerald-300 mb-2">
-                  Why it fits you:
-                </p>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  {suggestion.why}
-                </p>
+                <p className="mb-2 text-sm font-semibold text-emerald-300">Why it fits you:</p>
+                <p className="text-sm leading-relaxed text-slate-300">{suggestion.why}</p>
               </div>
 
               <div className="mb-4">
-                <p className="text-sm font-semibold text-violet-300 mb-2">
-                  Path after your level:
-                </p>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  {suggestion.path}
-                </p>
+                <p className="mb-2 text-sm font-semibold text-violet-300">Path after your level:</p>
+                <p className="text-sm leading-relaxed text-slate-300">{suggestion.path}</p>
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-sky-300 mb-2">
-                  Skills to start:
-                </p>
+                <p className="mb-2 text-sm font-semibold text-sky-300">Skills to start:</p>
                 <div className="flex flex-wrap gap-2">
-                  {suggestion.skills.map((skill, skillIndex) => (
+                  {suggestion.skills.map((skill) => (
                     <span
-                      key={skillIndex}
+                      key={skill}
                       className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
                     >
                       {skill}
@@ -277,8 +305,22 @@ export default function CareerResultPage() {
             </div>
           ))}
         </div>
+
+        <div className="mt-6 flex gap-3">
+          <Link
+            href="/career-input"
+            className="rounded-full border border-slate-600 px-4 py-2 text-sm hover:bg-slate-800"
+          >
+            Edit my answers
+          </Link>
+          <Link
+            href="/profile"
+            className="rounded-full bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600"
+          >
+            Save in my profile
+          </Link>
+        </div>
       </div>
     </main>
   );
 }
-
