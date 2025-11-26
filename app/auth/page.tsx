@@ -54,16 +54,21 @@ export default function AuthPage() {
 
   // Load existing logged-in user
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("authUser");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as AuthUser;
-        setAuthUser(parsed);
-      } catch {
+    fetch("/api/auth/me")
+      .then((res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        return { user: null };
+      })
+      .then((data) => {
+        if (data.user) {
+          setAuthUser(data.user);
+        }
+      })
+      .catch(() => {
         // ignore
-      }
-    }
+      });
   }, []);
 
   const validateForm = (): string => {
@@ -87,7 +92,7 @@ export default function AuthPage() {
     return "";
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus("submitting");
     setError("");
@@ -99,33 +104,43 @@ export default function AuthPage() {
       return;
     }
 
-    // Build user object
-    const user: AuthUser = {
-      name: isSignup
-        ? formState.name.trim()
-        : formState.name.trim() || "User",
-      email: formState.email.trim(),
-    };
-
     try {
-      if (typeof window !== "undefined") {
-        // Save basic auth info
-        localStorage.setItem("authUser", JSON.stringify(user));
+      const endpoint = isSignup ? "/api/auth/signup" : "/api/auth/login";
+      const body = isSignup
+        ? {
+            name: formState.name.trim(),
+            email: formState.email.trim(),
+            password: formState.password,
+          }
+        : {
+            email: formState.email.trim(),
+            password: formState.password,
+          };
 
-        // Also sync into profileData so profile shows correct name/email
-        const existingProfileRaw = localStorage.getItem("profileData");
-        let profileData: any = existingProfileRaw ? JSON.parse(existingProfileRaw) : {};
-        profileData = {
-          ...profileData,
-          name: user.name,
-          email: user.email,
-        };
-        localStorage.setItem("profileData", JSON.stringify(profileData));
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setStatus("idle");
+        setError(data.error || "Something went wrong. Please try again.");
+        return;
       }
 
-      setAuthUser(user);
+      setAuthUser(data.user);
       setStatus("success");
-      router.push("/profile");
+      
+      // Redirect to profile after a short delay
+      setTimeout(() => {
+        router.push("/profile");
+        router.refresh();
+      }, 500);
     } catch (err) {
       setStatus("idle");
       setError("Something went wrong while saving your account. Please try again.");

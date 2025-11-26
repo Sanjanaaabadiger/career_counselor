@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const subjects = ["Math", "Science", "Biology", "Commerce", "Arts", "Computers"];
 const interests = ["Tech", "Design", "Business", "People", "Research", "Teaching"];
@@ -45,12 +45,37 @@ function loadProfileData(): ProfileData {
   }
 }
 
+interface SavedCareerReport {
+  id: string;
+  suggestions: any[];
+  missingSkills: string[];
+  startupIdea: any;
+  timestamp: string;
+}
+
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState<ProfileData>(() => loadProfileData());
+  const [savedReports, setSavedReports] = useState<SavedCareerReport[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
+  const [expandedReport, setExpandedReport] = useState<string | null>(null);
 
   const saveProfileData = () => {
     localStorage.setItem("profileData", JSON.stringify(profileData));
   };
+
+  useEffect(() => {
+    fetch("/api/profile/career-reports")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.reports) {
+          setSavedReports(data.reports);
+        }
+        setLoadingReports(false);
+      })
+      .catch(() => {
+        setLoadingReports(false);
+      });
+  }, []);
 
   const getInitial = (name: string) => (name ? name.charAt(0).toUpperCase() : "U");
 
@@ -322,6 +347,85 @@ export default function ProfilePage() {
             </Link>
           </div>
 
+        </div>
+
+        {/* Saved Career Reports Section */}
+        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl">
+          <h2 className="mb-4 text-2xl font-bold text-white">📋 Saved Career Reports</h2>
+          
+          {loadingReports ? (
+            <p className="text-slate-300">Loading reports...</p>
+          ) : savedReports.length === 0 ? (
+            <p className="text-slate-300">No saved career reports yet. Complete the career quiz and save your results!</p>
+          ) : (
+            <div className="space-y-4">
+              {savedReports.map((report) => (
+                <div
+                  key={report.id}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                >
+                  <button
+                    onClick={() => setExpandedReport(expandedReport === report.id ? null : report.id)}
+                    className="w-full flex items-center justify-between text-left"
+                  >
+                    <div>
+                      <h3 className="font-semibold text-white">
+                        Career Report - {new Date(report.timestamp).toLocaleDateString()}
+                      </h3>
+                      <p className="text-sm text-slate-400">
+                        {report.suggestions?.length || 0} career suggestions
+                      </p>
+                    </div>
+                    <span className="text-slate-400">
+                      {expandedReport === report.id ? "▼" : "▶"}
+                    </span>
+                  </button>
+                  
+                  {expandedReport === report.id && (
+                    <div className="mt-4 space-y-4 pt-4 border-t border-white/10">
+                      {/* Suggestions */}
+                      <div>
+                        <h4 className="mb-2 font-semibold text-emerald-300">Career Suggestions:</h4>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {report.suggestions?.map((suggestion: any, idx: number) => (
+                            <div key={idx} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                              <p className="font-semibold text-white">{suggestion.title}</p>
+                              <p className="text-xs text-slate-300 mt-1">{suggestion.why}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Missing Skills */}
+                      {report.missingSkills && report.missingSkills.length > 0 && (
+                        <div>
+                          <h4 className="mb-2 font-semibold text-rose-300">Missing Skills:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {report.missingSkills.map((skill: string, idx: number) => (
+                              <span key={idx} className="rounded-full bg-rose-500/20 px-3 py-1 text-xs text-rose-300 border border-rose-400/40">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Startup Idea */}
+                      {report.startupIdea && (
+                        <div>
+                          <h4 className="mb-2 font-semibold text-purple-300">Startup Idea:</h4>
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                            <p className="font-semibold text-white">{report.startupIdea.idea}</p>
+                            <p className="text-sm text-slate-300 mt-1">{report.startupIdea.whySuitable}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </main>

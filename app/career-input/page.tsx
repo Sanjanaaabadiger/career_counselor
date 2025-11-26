@@ -60,6 +60,21 @@ export default function CareerInputPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // Validate form
+    if (formData.subjects.length === 0) {
+      setStatus("error");
+      return;
+    }
+    if (formData.interests.length === 0) {
+      setStatus("error");
+      return;
+    }
+    if (formData.hobbies.length === 0) {
+      setStatus("error");
+      return;
+    }
+
     setStatus("saving");
 
     try {
@@ -215,14 +230,19 @@ export default function CareerInputPage() {
               </p>
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-900/30 transition hover:brightness-110"
-                disabled={!formData.level || !formData.marks || formData.subjects.length === 0}
+                className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-900/30 transition hover:brightness-110 disabled:opacity-50"
+                disabled={!formData.level || !formData.marks || formData.subjects.length === 0 || formData.interests.length === 0 || formData.hobbies.length === 0}
               >
                 Generate my career paths
               </button>
               {status === "saved" && <p className="text-center text-sm text-emerald-300">Saved! Redirecting...</p>}
               {status === "error" && (
-                <p className="text-center text-sm text-rose-400">Could not save. Please try again.</p>
+                <p className="text-center text-sm text-rose-400">
+                  {formData.subjects.length === 0 ? "Please select at least one subject." :
+                   formData.interests.length === 0 ? "Please select at least one interest." :
+                   formData.hobbies.length === 0 ? "Please select at least one hobby." :
+                   "Could not save. Please try again."}
+                </p>
               )}
             </div>
           </section>

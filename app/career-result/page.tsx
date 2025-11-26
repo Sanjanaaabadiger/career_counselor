@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface CareerSuggestion {
   title: string;
@@ -380,6 +380,233 @@ export default function CareerResultPage() {
           ))}
         </div>
 
+        {/* Enhanced sections for each career */}
+        {suggestions.map((suggestion, index) => {
+          // Calculate skill gap
+          const userSkillsMap: Record<string, string[]> = {
+            Math: ["Problem Solving", "Data Analysis"],
+            Science: ["Research Methods", "Data Analysis"],
+            Biology: ["Biology", "Research Methods"],
+            Commerce: ["Financial Analysis", "Accounting"],
+            Computers: ["Programming", "Data Structures"],
+            Tech: ["Programming", "Problem Solving"],
+            Coding: ["Programming", "Data Structures"],
+          };
+          const userSkillsSet = new Set<string>();
+          storedCareerInput?.subjects.forEach((s) => {
+            (userSkillsMap[s] || []).forEach((sk) => userSkillsSet.add(sk));
+          });
+          storedCareerInput?.interests.forEach((i) => {
+            (userSkillsMap[i] || []).forEach((sk) => userSkillsSet.add(sk));
+          });
+          storedCareerInput?.hobbies.forEach((h) => {
+            (userSkillsMap[h] || []).forEach((sk) => userSkillsSet.add(sk));
+          });
+          
+          const skillsUserHas = suggestion.skills.filter((s) => userSkillsSet.has(s));
+          const skillsToLearn = suggestion.skills.filter((s) => !userSkillsSet.has(s));
+          
+          // Generate roadmap
+          const getRoadmap = (title: string, level: string) => {
+            if (title.includes("Software") || title.includes("AI")) {
+              return {
+                stream: "Science (with Computer Science)",
+                ugPath: "B.E./B.Tech in Computer Science",
+                pgOptions: ["M.Tech in CS", "MS in Software Engineering"],
+                timeline: "10th → 12th (PCM) → B.Tech → M.Tech/MS → Job",
+              };
+            } else if (title.includes("Design")) {
+              return {
+                stream: "Arts or Science",
+                ugPath: "B.Des in UI/UX or B.Tech + Design courses",
+                pgOptions: ["M.Des in Interaction Design"],
+                timeline: "10th → 12th (Any) → B.Des/B.Tech → M.Des → Job",
+              };
+            } else if (title.includes("Marketing") || title.includes("Business")) {
+              return {
+                stream: "Commerce or Arts",
+                ugPath: "BBA in Marketing or BA",
+                pgOptions: ["MBA in Marketing"],
+                timeline: "10th → 12th (Commerce/Arts) → BBA/BA → MBA → Job",
+              };
+            }
+            return {
+              stream: "Based on career",
+              ugPath: "Relevant degree",
+              pgOptions: ["Relevant PG"],
+              timeline: "10th → 12th → UG → PG → Job",
+            };
+          };
+          const roadmap = getRoadmap(suggestion.title, storedCareerInput?.level || "");
+          
+          return (
+            <div key={`enhanced-${index}`} className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl">
+              <h2 className="mb-6 text-2xl font-bold text-white">{suggestion.title} - Detailed Analysis</h2>
+              
+              {/* Full Career Roadmap */}
+              <div className="mb-6">
+                <h3 className="mb-3 text-lg font-semibold text-emerald-300">📋 Full Career Roadmap</h3>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-2">
+                  <p><span className="font-semibold text-violet-300">Suggested Stream:</span> <span className="text-slate-300">{roadmap.stream}</span></p>
+                  <p><span className="font-semibold text-violet-300">UG Path:</span> <span className="text-slate-300">{roadmap.ugPath}</span></p>
+                  <p><span className="font-semibold text-violet-300">PG Options:</span> <span className="text-slate-300">{roadmap.pgOptions.join(", ")}</span></p>
+                  <p><span className="font-semibold text-violet-300">Timeline:</span> <span className="text-slate-300">{roadmap.timeline}</span></p>
+                </div>
+              </div>
+
+              {/* Skill Gap Analysis */}
+              <div className="mb-6">
+                <h3 className="mb-3 text-lg font-semibold text-sky-300">🔍 Skill Gap Analysis</h3>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                  {skillsUserHas.length > 0 && (
+                    <div>
+                      <p className="mb-2 font-semibold text-emerald-300">✅ You already have:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {skillsUserHas.map((skill) => (
+                          <span key={skill} className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs text-emerald-300 border border-emerald-400/40">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {skillsToLearn.length > 0 && (
+                    <div>
+                      <p className="mb-2 font-semibold text-rose-300">📚 You need to learn:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {skillsToLearn.map((skill) => (
+                          <span key={skill} className="rounded-full bg-rose-500/20 px-3 py-1 text-xs text-rose-300 border border-rose-400/40">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Learning Links */}
+              {skillsToLearn.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="mb-3 text-lg font-semibold text-purple-300">🎓 Learn Missing Skills</h3>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                    {skillsToLearn.slice(0, 3).map((skill) => {
+                      const encoded = encodeURIComponent(skill);
+                      const links = {
+                        nptel: `https://nptel.ac.in/courses/search?q=${encoded}`,
+                        youtube: `https://www.youtube.com/results?search_query=${encoded}+course`,
+                        coursera: `https://www.coursera.org/search?query=${encoded}`,
+                        udemy: `https://www.udemy.com/courses/search/?q=${encoded}`,
+                      };
+                      return (
+                        <div key={skill} className="border-b border-white/10 pb-3 last:border-0 last:pb-0">
+                          <p className="mb-2 font-semibold text-white">{skill}</p>
+                          <div className="flex flex-wrap gap-2">
+                            <a href={links.nptel} target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 hover:bg-emerald-500/20 hover:border-emerald-400/40 hover:text-emerald-300 transition">
+                              NPTEL
+                            </a>
+                            <a href={links.youtube} target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 hover:bg-emerald-500/20 hover:border-emerald-400/40 hover:text-emerald-300 transition">
+                              YouTube
+                            </a>
+                            <a href={links.coursera} target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 hover:bg-emerald-500/20 hover:border-emerald-400/40 hover:text-emerald-300 transition">
+                              Coursera
+                            </a>
+                            <a href={links.udemy} target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 hover:bg-emerald-500/20 hover:border-emerald-400/40 hover:text-emerald-300 transition">
+                              Udemy
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Startup Idea Generator */}
+        {storedCareerInput && (() => {
+          const { interests, hobbies } = storedCareerInput;
+          let startupIdea = {
+            idea: "Personalized Learning Platform",
+            whySuitable: "Your diverse interests make you ideal for building a platform that offers personalized learning paths.",
+            requiredSkills: ["Product Development", "Marketing", "Technology"],
+            roadmap: {
+              "Month 1-2": "Identify niche, build MVP with basic courses",
+              "Month 3-4": "Launch beta, acquire initial learners, iterate",
+              "Month 5-6": "Expand course library, implement monetization, scale marketing",
+            },
+            monetization: "Course sales ($19-99 per course), subscription model ($29-79/month)",
+          };
+          
+          if (interests.includes("Tech") || hobbies.includes("Coding")) {
+            if (interests.includes("Business")) {
+              startupIdea = {
+                idea: "EdTech Platform for Coding Bootcamps",
+                whySuitable: "Your tech skills combined with business interest make you ideal for building an educational tech startup.",
+                requiredSkills: ["Programming", "Business Strategy", "Marketing"],
+                roadmap: {
+                  "Month 1-2": "Validate idea, build MVP with basic features",
+                  "Month 3-4": "Launch beta, get initial users, gather feedback",
+                  "Month 5-6": "Scale platform, add advanced features, monetize",
+                },
+                monetization: "Subscription model ($29-99/month), corporate training programs",
+              };
+            }
+          } else if (interests.includes("Design") && interests.includes("Business")) {
+            startupIdea = {
+              idea: "Custom Design Marketplace for Small Businesses",
+              whySuitable: "Your design skills and business acumen make you perfect for connecting designers with businesses.",
+              requiredSkills: ["Design Thinking", "Digital Marketing", "Business Development"],
+              roadmap: {
+                "Month 1-2": "Build platform MVP, onboard initial designers",
+                "Month 3-4": "Launch marketplace, acquire first business customers",
+                "Month 5-6": "Scale both sides, implement payment system, build brand",
+              },
+              monetization: "Commission (15-20% per project), subscription for businesses ($49-199/month)",
+            };
+          }
+
+          return (
+            <div className="mt-8 rounded-3xl border border-white/10 bg-gradient-to-br from-purple-500/10 to-pink-500/10 p-6 shadow-xl">
+              <h2 className="mb-4 text-2xl font-bold text-white">🚀 Startup Idea Generator</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="mb-2 font-semibold text-purple-300">Startup Idea:</h3>
+                  <p className="text-lg font-bold text-white">{startupIdea.idea}</p>
+                </div>
+                <div>
+                  <h3 className="mb-2 font-semibold text-emerald-300">Why it's suitable:</h3>
+                  <p className="text-slate-300">{startupIdea.whySuitable}</p>
+                </div>
+                <div>
+                  <h3 className="mb-2 font-semibold text-sky-300">Required Skills:</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {startupIdea.requiredSkills.map((skill) => (
+                      <span key={skill} className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300 border border-white/20">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="mb-2 font-semibold text-violet-300">6-Month Roadmap:</h3>
+                  <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm text-slate-300"><span className="font-semibold">Month 1-2:</span> {startupIdea.roadmap["Month 1-2"]}</p>
+                    <p className="text-sm text-slate-300"><span className="font-semibold">Month 3-4:</span> {startupIdea.roadmap["Month 3-4"]}</p>
+                    <p className="text-sm text-slate-300"><span className="font-semibold">Month 5-6:</span> {startupIdea.roadmap["Month 5-6"]}</p>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="mb-2 font-semibold text-rose-300">Monetization Idea:</h3>
+                  <p className="text-slate-300">{startupIdea.monetization}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="mt-6 flex gap-3">
           <Link
             href="/career-input"
@@ -387,12 +614,37 @@ export default function CareerResultPage() {
           >
             Edit my answers
           </Link>
-          <Link
-            href="/profile"
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch("/api/profile/save-career-report", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    suggestions,
+                    missingSkills: suggestions.flatMap((s) => {
+                      const userSkillsMap: Record<string, string[]> = {
+                        Math: ["Problem Solving"], Tech: ["Programming"], Coding: ["Programming"],
+                      };
+                      const userSkillsSet = new Set<string>();
+                      storedCareerInput?.subjects.forEach((sub) => {
+                        (userSkillsMap[sub] || []).forEach((sk) => userSkillsSet.add(sk));
+                      });
+                      return s.skills.filter((sk) => !userSkillsSet.has(sk));
+                    }),
+                  }),
+                });
+                if (response.ok) {
+                  alert("Report saved successfully!");
+                }
+              } catch (error) {
+                console.error("Failed to save report:", error);
+              }
+            }}
             className="rounded-full bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600"
           >
-            Save in my profile
-          </Link>
+            Save report to profile
+          </button>
         </div>
       </div>
     </main>

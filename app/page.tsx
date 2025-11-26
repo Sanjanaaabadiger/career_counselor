@@ -6,6 +6,7 @@ const navigationLinks = [
   { href: "/", label: "Home" },
   { href: "/career-input", label: "Career Quiz" },
   { href: "/career-result", label: "Career Results" },
+  { href: "/resume-analyzer", label: "Resume Analyzer" }, // ⭐ new
   { href: "/profile", label: "Profile" },
 ];
 
