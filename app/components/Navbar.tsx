@@ -32,6 +32,9 @@ export default function Navbar() {
           <Link href="/career-result" className="hover:text-white">
             Results
           </Link>
+          <Link href="/resume-analyser" className="hover:text-white">
+            Resume Analyzer
+          </Link>
           <Link href="/profile" className="hover:text-white">
             Profile
           </Link>
